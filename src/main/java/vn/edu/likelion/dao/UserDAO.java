@@ -6,7 +6,9 @@ import vn.edu.likelion.entity.User;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 
 public class UserDAO {
     private ConnectionDB connectionDB = new ConnectionDB();
@@ -16,7 +18,6 @@ public class UserDAO {
 
     public boolean insertOneUser(User user){
         connectionDB.connect();
-        boolean flag = false;
 
         String query = "INSERT INTO USERS(USERNAME,PASSWORD,ROLE_ID) VALUES(?,?,?)";
         String passwordEncode = Base64.getEncoder().encodeToString(user.getPassword().getBytes());
@@ -26,37 +27,117 @@ public class UserDAO {
             preparedStatement.setString(1,user.getUsername());
             preparedStatement.setString(2,passwordEncode);
             preparedStatement.setInt(3,2);
-            preparedStatement.executeUpdate();
-            flag = true;
+            int row = preparedStatement.executeUpdate();
+            if(row > 0) return true;
         } catch (SQLException e) {
             System.out.print(e.getMessage());
         } finally {
             connectionDB.disconnect();
         }
 
-        return flag;
+        return false;
+    }
+
+    public boolean checkDuplicateUsername(String username, int id){
+        connectionDB.connect();
+        String query = "SELECT * FROM USERS WHERE USERNAME = ?";
+
+        try {
+            preparedStatement = connectionDB.getConnection().prepareStatement(query);
+            preparedStatement.setString(1, username);
+            resultSet = preparedStatement.executeQuery();
+            if(resultSet.next()){
+                if((id == 0) || (id != resultSet.getInt(1))) return true;
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }finally {
+            connectionDB.disconnect();
+        }
+        return false;
+    }
+
+    public User checkExistOfManager(int id){
+        connectionDB.connect();
+        String query = "SELECT * FROM USERS WHERE ID = ?";
+
+        try {
+            preparedStatement = connectionDB.getConnection().prepareStatement(query);
+            preparedStatement.setInt(1,id);
+            resultSet = preparedStatement.executeQuery();
+            if(resultSet.next()){
+                user = new User();
+                user.setId(resultSet.getInt(1));
+                user.setUsername(resultSet.getString(2));
+                return user;
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }finally {
+            connectionDB.disconnect();
+        }
+        return null;
     }
 
     public boolean updateUser(User user){
         connectionDB.connect();
-
         String query = "UPDATE USERS SET USERNAME = ?, PASSWORD = ? WHERE ID = ?";
         String passwordEncode = Base64.getEncoder().encodeToString(user.getPassword().getBytes());
-        boolean flag = false;
 
         try {
             preparedStatement = connectionDB.getConnection().prepareStatement(query);
             preparedStatement.setString(1, user.getUsername());
             preparedStatement.setString(2, passwordEncode);
             preparedStatement.setInt(3, user.getId());
-            preparedStatement.executeUpdate();
-            flag = true;
+            int row = preparedStatement.executeUpdate();
+            if(row > 0) return true;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         } finally {
             connectionDB.disconnect();
         }
 
-        return flag;
+        return false;
+    }
+
+    public List<User> getAll(){
+        connectionDB.connect();
+        List<User> listUser = new ArrayList<>();
+        StringBuilder query = new StringBuilder("SELECT A.ID, A.USERNAME, B.NAME ");
+        query.append("FROM USERS A INNER JOIN ROLE B ON A.ROLE_ID = B.ID");
+
+        try {
+            preparedStatement = connectionDB.getConnection().prepareStatement(String.valueOf(query));
+            resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()){
+                user = new User();
+                user.setId(resultSet.getInt(1));
+                user.setUsername(resultSet.getString(2));
+                user.setRole(resultSet.getString(3));
+                listUser.add(user);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }finally {
+            connectionDB.disconnect();
+        }
+        return listUser;
+    }
+
+    public boolean delete(int id){
+        connectionDB.connect();
+        String query = "DELETE FROM USERS WHERE ID = ?";
+
+        try {
+            preparedStatement = connectionDB.getConnection().prepareStatement(query);
+            preparedStatement.setInt(1, id);
+            int row = preparedStatement.executeUpdate();
+            if(row > 0) return true;
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            connectionDB.disconnect();
+        }
+        return false;
     }
 }

@@ -5,14 +5,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.List;
-
 @Setter
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Role {
+public class Branch {
     private Integer id;
     private String name;
-    private List<String> listPermissions;
+    private String address;
+    private User user;
 }
