@@ -136,6 +136,7 @@ public class BranchDAO {
                 branch.setId(resultSet.getInt(1));
                 branch.setName(resultSet.getString(2));
                 branch.setAddress(resultSet.getString(3));
+                branch.setUser(new User(resultSet.getInt(4)));
                 return branch;
             }
         } catch (SQLException e) {
@@ -182,13 +183,15 @@ public class BranchDAO {
 
     public boolean updateBranch(Branch branch){
         connectionDB.connect();
-        String query = "UPDATE BRANCH SET NAME = ?,ADDRESS = ? WHERE ID = ?";
+        String query = "UPDATE BRANCH SET NAME = ?,ADDRESS = ?,USER_ID = ? WHERE ID = ?";
 
         try {
             preparedStatement = connectionDB.getConnection().prepareStatement(query);
             preparedStatement.setString(1, branch.getName());
             preparedStatement.setString(2, branch.getAddress());
-            preparedStatement.setInt(3, branch.getId());
+            if(branch.getUser().getId() == 0) preparedStatement.setNull(3,Types.INTEGER);
+            else preparedStatement.setInt(3,branch.getUser().getId());
+            preparedStatement.setInt(4, branch.getId());
 
             int row = preparedStatement.executeUpdate();
             if (row > 0) return true;
@@ -198,5 +201,49 @@ public class BranchDAO {
             connectionDB.disconnect();
         }
         return false;
+    }
+
+    public boolean checkManagementOfWarehouse(Integer branchId){
+        connectionDB.connect();
+        String query = "SELECT * FROM BRANCH WHERE ID = ? AND USER_ID IS NULL";
+
+        try {
+            preparedStatement = connectionDB.getConnection().prepareStatement(query);
+            preparedStatement.setInt(1, branchId);
+            resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()){
+                return true;
+            }
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            connectionDB.disconnect();
+        }
+        return false;
+    }
+
+    public List<Branch> listBranchWithoutBranchChoice(Integer branchId){
+        connectionDB.connect();
+        StringBuilder query = new StringBuilder("SELECT B.ID, B.NAME, B.ADDRESS ");
+        query.append("FROM USERS A RIGHT JOIN BRANCH B ON A.ID = B.USER_ID ");
+        query.append("WHERE B.USER_ID IS NOT NULL AND B.ID != ?");
+
+        List<Branch> listBranches = new ArrayList<>();
+        try {
+            preparedStatement = connectionDB.getConnection().prepareStatement(String.valueOf(query));
+            preparedStatement.setInt(1, branchId);
+            resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()){
+                branch = new Branch();
+                branch.setId(resultSet.getInt(1));
+                branch.setName(resultSet.getString(2));
+                branch.setAddress(resultSet.getString(3));
+                listBranches.add(branch);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return listBranches;
     }
 }

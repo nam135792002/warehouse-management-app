@@ -18,4 +18,19 @@ public class User {
     public User(String username) {
         this.username = username;
     }
+
+    public User(int idUser, String role) {
+        this.id = idUser;
+        this.role = role;
+    }
+
+    public User(int idUser) {
+        this.id = idUser;
+    }
+
+    public User(Integer id, String username, String role) {
+        this.id = id;
+        this.username = username;
+        this.role = role;
+    }
 }

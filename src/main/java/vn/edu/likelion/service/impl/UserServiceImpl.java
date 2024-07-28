@@ -1,20 +1,25 @@
 package vn.edu.likelion.service.impl;
 
 import vn.edu.likelion.dao.BranchDAO;
+import vn.edu.likelion.dao.ProductDAO;
 import vn.edu.likelion.dao.UserDAO;
+import vn.edu.likelion.entity.Branch;
 import vn.edu.likelion.entity.User;
 import vn.edu.likelion.exception.NotFoundException;
 import vn.edu.likelion.service.GeneralInterface;
+import vn.edu.likelion.service.UserInterface;
 
 import java.util.List;
 import java.util.Scanner;
 
-public class UserServiceImpl implements GeneralInterface {
+public class UserServiceImpl implements GeneralInterface, UserInterface {
 
     private Scanner sc = new Scanner(System.in);
     private UserDAO userDAO = new UserDAO();
     private BranchDAO branchDAO = new BranchDAO();
     private User user = null;
+    private ProductDAO productDAO = new ProductDAO();
+    private BranchServiceImpl branchService = new BranchServiceImpl();
 
     @Override
     public void add() {
@@ -68,7 +73,19 @@ public class UserServiceImpl implements GeneralInterface {
 
         user = userDAO.checkExistOfManager(idManager);
         if(user != null){
-            if(branchDAO.deleteBranchByUserId(idManager) || userDAO.delete(idManager)) System.out.println(">> Delete manager successfully!");
+            int idBranch = userDAO.checkUserManageWarehouse(idManager);
+            if(idBranch > 0){
+                if(productDAO.checkProductInWarehouse(idBranch)){
+                    System.out.println("This warehouse has contain product. Please move all of product to " +
+                            "another warehouse before deleting!");
+                    List<Branch> listBranches = branchDAO.listBranchWithoutBranchChoice(idBranch);
+                    int idToBranch = branchService.chooseIdBranchInList(listBranches);
+                    productDAO.moveProductToAnotherWarehouse(idBranch,idToBranch,2);
+                }
+            }
+            if(branchDAO.deleteBranchByUserId(idManager) || userDAO.delete(idManager)){
+                System.out.println(">> Delete manager successfully!");
+            }
             else System.out.println(">> Delete manager failed!");
         }else{
             throw new NotFoundException("ID " + idManager + " not found in DB");
@@ -103,5 +120,16 @@ public class UserServiceImpl implements GeneralInterface {
             }
         }
         return idManager;
+    }
+
+    @Override
+    public User login() {
+        System.out.println(">> Please login before using app");
+        System.out.print("Enter your username: ");
+        String username = sc.nextLine();
+        System.out.print("Enter your password: ");
+        String password = sc.nextLine();
+
+        return userDAO.checkExistUsernameAndPasswordInDB(username, password);
     }
 }

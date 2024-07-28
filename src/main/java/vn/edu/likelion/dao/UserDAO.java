@@ -164,4 +164,63 @@ public class UserDAO {
         }
         return listUsers;
     }
+
+    public int getIdBranch(Integer userId){
+        connectionDB.connect();
+        String query = "SELECT B.ID FROM USERS A INNER JOIN BRANCH B ON A.ID = b.user_id WHERE A.ID = ?";
+
+        try {
+            preparedStatement = connectionDB.getConnection().prepareStatement(query);
+            preparedStatement.setInt(1, userId);
+            resultSet = preparedStatement.executeQuery();
+            if(resultSet.next()){
+                return resultSet.getInt(1);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            connectionDB.disconnect();
+        }
+        return 0;
+    }
+
+    public int checkUserManageWarehouse(Integer userId){
+        connectionDB.connect();
+        String query = "SELECT B.ID FROM USERS A INNER JOIN BRANCH B ON A.ID = B.USER_ID WHERE A.ID = ?";
+
+        try {
+            preparedStatement = connectionDB.getConnection().prepareStatement(query);
+            preparedStatement.setInt(1,userId);
+            resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) return resultSet.getInt(1);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            connectionDB.disconnect();
+        }
+        return 0;
+    }
+
+    public User checkExistUsernameAndPasswordInDB(String username, String password){
+        connectionDB.connect();
+        String query = "SELECT A.ID,A.USERNAME,B.NAME FROM USERS A INNER JOIN ROLE B ON A.ROLE_ID = B.ID WHERE USERNAME = ? AND PASSWORD = ?";
+
+        try {
+            preparedStatement = connectionDB.getConnection().prepareStatement(query);
+            String passwordEncode = Base64.getEncoder().encodeToString(password.getBytes());
+            preparedStatement.setString(1, username);
+            preparedStatement.setString(2,passwordEncode);
+            resultSet = preparedStatement.executeQuery();
+            if(resultSet.next()){
+                user = new User(resultSet.getInt(1), resultSet.getString(2), resultSet.getString(3));
+                return user;
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            connectionDB.disconnect();
+        }
+        return null;
+    }
 }

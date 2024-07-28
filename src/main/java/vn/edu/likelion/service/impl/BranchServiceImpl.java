@@ -1,6 +1,7 @@
 package vn.edu.likelion.service.impl;
 
 import vn.edu.likelion.dao.BranchDAO;
+import vn.edu.likelion.dao.ProductDAO;
 import vn.edu.likelion.dao.UserDAO;
 import vn.edu.likelion.entity.Branch;
 import vn.edu.likelion.entity.User;
@@ -16,6 +17,7 @@ public class BranchServiceImpl implements GeneralInterface, BranchInterface {
     private UserDAO userDAO = new UserDAO();
     private Branch branch = null;
     private Scanner sc = new Scanner(System.in);
+    private ProductDAO productDAO = new ProductDAO();
 
     @Override
     public void add() {
@@ -79,7 +81,11 @@ public class BranchServiceImpl implements GeneralInterface, BranchInterface {
 
     }
 
-    private int chooseIdBranchInList(List<Branch> listBranches){
+    public List<Branch> takeListAll(){
+        return branchDAO.getAll();
+    }
+
+    public int chooseIdBranchInList(List<Branch> listBranches){
         boolean flag;
         boolean checkIdInList;
         int idBranch = 0;
@@ -131,6 +137,31 @@ public class BranchServiceImpl implements GeneralInterface, BranchInterface {
         branch = branchDAO.checkExistedBranchById(idBranch);
         if(branch != null){
             enterInfoBranch(branch);
+
+            while (true){
+                System.out.println(">> Press 1 to replace new manager.");
+                System.out.println(">> Press 0 to skip.");
+                System.out.print("Enter your choice: ");
+                int choose = 0;
+                try{
+                    choose = Integer.parseInt(sc.nextLine());
+                }catch (NumberFormatException e){
+                    System.out.println("Your choice is invalid! Please choose again.");
+                }
+                if(choose == 1){
+                    List<User> listUsers = userDAO.getAllUserWithoutAssign();
+                    if (listUsers.isEmpty()) {
+                        System.out.println(">> List of user is empty, so let's add more user before using this function!");
+                    }else {
+                        System.out.println("---------------------------------------------");
+
+                        int idUser = chooseIdUserInList(listUsers);
+                        branch.setUser(new User(idUser));
+                    }
+                }else if(choose == 0) break;
+                else System.out.println("Not found this function. Please choose again!");
+            }
+
             if(branchDAO.updateBranch(branch)) System.out.println("Update branch successfully!");
             else System.out.println("Update branch failed!");
         }else throw new NotFoundException("ID: " + idBranch + " not found in DB");
@@ -161,9 +192,18 @@ public class BranchServiceImpl implements GeneralInterface, BranchInterface {
         listALl();
         System.out.println("DELETE A BRANCH: ");
         int idBranch = enterIdBranch();
+
         if(branchDAO.checkExistedBranchById(idBranch) != null){
-            if (branchDAO.deleteBranchById(idBranch)) System.out.println("Delete branch successfully!");
-            else System.out.println("Delete branch failed!");
+            if(productDAO.checkProductInWarehouse(idBranch)){
+                System.out.println("This warehouse has contain product. Please move all of product to " +
+                        "another warehouse before deleting!");
+                List<Branch> listBranches = branchDAO.listBranchWithoutBranchChoice(idBranch);
+                int idToBranch = chooseIdBranchInList(listBranches);
+                productDAO.moveProductToAnotherWarehouse(idBranch,idToBranch,2);
+            }
+            if(branchDAO.deleteBranchById(idBranch)){
+                System.out.println("Delete branch successfully!");
+            }else System.out.println("Delete branch failed!");
         }else throw new NotFoundException(">> ID " + idBranch + " not found in DB");
     }
 
