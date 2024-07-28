@@ -1,16 +1,19 @@
 package vn.edu.likelion.service.impl;
 
+import vn.edu.likelion.dao.BranchDAO;
 import vn.edu.likelion.dao.UserDAO;
 import vn.edu.likelion.entity.User;
+import vn.edu.likelion.exception.NotFoundException;
 import vn.edu.likelion.service.GeneralInterface;
 
 import java.util.List;
 import java.util.Scanner;
 
-public class GeneralServiceImpl implements GeneralInterface {
+public class UserServiceImpl implements GeneralInterface {
 
     private Scanner sc = new Scanner(System.in);
     private UserDAO userDAO = new UserDAO();
+    private BranchDAO branchDAO = new BranchDAO();
     private User user = null;
 
     @Override
@@ -29,7 +32,7 @@ public class GeneralServiceImpl implements GeneralInterface {
     }
 
     @Override
-    public void update() {
+    public void update() throws NotFoundException {
         listALl();
         System.out.println(">> UPDATE A MANAGER: ");
         int idManager = enterIdOfUser();
@@ -40,7 +43,7 @@ public class GeneralServiceImpl implements GeneralInterface {
             if(userDAO.updateUser(user)) System.out.println(">> Update manager successfully!");
             else System.out.println(">> Update manager failed!");
         }else{
-            System.out.println(">> ID of manager doesn't exist in DB!");
+            throw new NotFoundException("ID " + idManager + " not found in DB");
         }
     }
 
@@ -58,17 +61,17 @@ public class GeneralServiceImpl implements GeneralInterface {
     }
 
     @Override
-    public void delete() {
+    public void delete() throws NotFoundException {
         listALl();
         System.out.println(">> DELETE A MANAGER: ");
         int idManager = enterIdOfUser();
 
         user = userDAO.checkExistOfManager(idManager);
         if(user != null){
-            if(userDAO.delete(idManager)) System.out.println(">> Delete manager successfully!");
+            if(branchDAO.deleteBranchByUserId(idManager) || userDAO.delete(idManager)) System.out.println(">> Delete manager successfully!");
             else System.out.println(">> Delete manager failed!");
         }else{
-            System.out.println(">> ID of manager doesn't exist in DB!");
+            throw new NotFoundException("ID " + idManager + " not found in DB");
         }
     }
 

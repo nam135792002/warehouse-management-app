@@ -15,6 +15,7 @@ public class UserDAO {
     private PreparedStatement preparedStatement = null;
     private ResultSet resultSet = null;
     private User user = null;
+    private BranchDAO branchDAO = new BranchDAO();
 
     public boolean insertOneUser(User user){
         connectionDB.connect();
@@ -139,5 +140,28 @@ public class UserDAO {
             connectionDB.disconnect();
         }
         return false;
+    }
+
+    public List<User> getAllUserWithoutAssign(){
+        connectionDB.connect();
+        StringBuilder query = new StringBuilder("SELECT A.ID, A.USERNAME ");
+        query.append("FROM USERS A LEFT JOIN BRANCH B ON A.ID = B.USER_ID ");
+        query.append("WHERE A.ROLE_ID = 2 AND B.ID IS NULL");
+        List<User> listUsers = new ArrayList<>();
+        try {
+            preparedStatement = connectionDB.getConnection().prepareStatement(String.valueOf(query));
+            resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()){
+                user = new User();
+                user.setId(resultSet.getInt(1));
+                user.setUsername(resultSet.getString(2));
+                listUsers.add(user);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            connectionDB.disconnect();
+        }
+        return listUsers;
     }
 }
