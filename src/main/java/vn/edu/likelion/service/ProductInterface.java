@@ -5,4 +5,5 @@ import vn.edu.likelion.entity.User;
 public interface ProductInterface {
     void addProduct(User user);
     void listAll(User user);
+    void exportFileExcel(User user);
 }

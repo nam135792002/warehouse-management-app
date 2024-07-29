@@ -15,7 +15,6 @@ public class WarehouseManagementApp {
     public static ProductServiceImpl productService = new ProductServiceImpl();
     public static Scanner sc = new Scanner(System.in);
     public static void main(String[] args) {
-
         while (true){
             try {
                 System.out.println("\t\t>>> WAREHOUSE MANAGEMENT SYSTEM <<<");
@@ -32,13 +31,13 @@ public class WarehouseManagementApp {
                             try {
                                 menuOfAdmin();
                             } catch (NotFoundException e) {
-                                throw new RuntimeException(e);
+                                System.out.println(e.getMessage());
                             }
                         }else{
                             try {
                                 menuOfManager();
                             } catch (NotFoundException e) {
-                                throw new RuntimeException(e);
+                                System.out.println(e.getMessage());
                             }
                         }
                     }
@@ -57,22 +56,47 @@ public class WarehouseManagementApp {
     public static void menuOfAdmin() throws NotFoundException {
         while (true){
             try {
-                System.out.println(">> Manage user: ");
-                System.out.println("\t\t1. Create a manager");
-                System.out.println("\t\t2. List of managers");
-                System.out.println("\t\t3. Update a manager");
-                System.out.println("\t\t4. Delete a manager");
-                System.out.println(">> Manage warehouse branch: ");
-                System.out.println("\t\t5. Create a warehouse");
-                System.out.println("\t\t6. List of warehouse");
-                System.out.println("\t\t7. Update a warehouse");
-                System.out.println("\t\t8. Delete a warehouse");
-                System.out.println("\t\t9. Assign manger for a warehouse");
-                System.out.println(">> Manage product: ");
-                System.out.println("\t\t10. Import file excel into system");
-                System.out.println("\t\t11. List of product by branch id");
-                System.out.println("\t\t12. Export report file excel");
-                System.out.println("\t\t Press 0 to exit");
+                // Define menu items
+                String[] userMenu = {
+                        "1. Create a manager",
+                        "2. List of managers",
+                        "3. Update a manager",
+                        "4. Delete a manager"
+                };
+
+                String[] branchMenu = {
+                        "5. Create a warehouse",
+                        "6. List of warehouse",
+                        "7. Update a warehouse",
+                        "8. Delete a warehouse",
+                        "9. Assign manager for a warehouse"
+                };
+
+                String[] productMenu = {
+                        "10. Import file excel into system",
+                        "11. List of product by branch id",
+                        "12. Export report file excel",
+                        "Press 0 to exit"
+                };
+
+                // Calculate maximum length of each column
+                int maxUserMenuLength = getMaxStringLength(userMenu);
+                int maxBranchMenuLength = getMaxStringLength(branchMenu);
+                int maxProductMenuLength = getMaxStringLength(productMenu);
+                System.out.println("============================================================================================");
+                // Print headers
+                System.out.printf("%-" + maxUserMenuLength + "s   %-" + maxBranchMenuLength + "s   %-" + maxProductMenuLength + "s\n", "Manage user:", "Manage warehouse branch:", "Manage product:");
+                System.out.println("=".repeat(maxUserMenuLength) + "   " + "=".repeat(maxBranchMenuLength) + "   " + "=".repeat(maxProductMenuLength));
+
+                // Print menu items
+                for (int i = 0; i < branchMenu.length; i++) {
+                    String userItem = i < userMenu.length ? userMenu[i] : "";
+                    String branchItem = branchMenu[i];
+                    String productItem = i < productMenu.length ? productMenu[i] : "";
+
+                    System.out.printf("%-" + maxUserMenuLength + "s   %-" + maxBranchMenuLength + "s   %-" + maxProductMenuLength + "s\n", userItem, branchItem, productItem);
+                }
+                System.out.println("============================================================================================");
 
                 System.out.print("\t--> Enter your choice: ");
                 String input = sc.nextLine();
@@ -95,13 +119,13 @@ public class WarehouseManagementApp {
                 } else if (select == 8) {
                     branchService.delete();
                 } else if (select == 9) {
-                    branchService.delete();
+                    branchService.assign();
                 } else if (select == 10) {
                     productService.addProduct(user);
                 } else if (select == 11) {
                     productService.listAll(user);
                 } else if (select == 12) {
-                    System.out.println("Updating...!");
+                    productService.exportFileExcel(user);
                 } else if (select == 0) {
                     break;
                 }else {
@@ -131,7 +155,7 @@ public class WarehouseManagementApp {
                 } else if (select == 2) {
                     productService.listAll(user);
                 } else if (select == 3) {
-                    System.out.println("Updating...!");
+                    productService.exportFileExcel(user);
                 } else if (select == 0) {
                     break;
                 } else {
@@ -141,5 +165,15 @@ public class WarehouseManagementApp {
                 System.out.println("--> Invalid your choice. Please, choice again!");
             }
         }
+    }
+
+    private static int getMaxStringLength(String[] array) {
+        int maxLength = 0;
+        for (String s : array) {
+            if (s.length() > maxLength) {
+                maxLength = s.length();
+            }
+        }
+        return maxLength;
     }
 }

@@ -82,11 +82,12 @@ public class UserServiceImpl implements GeneralInterface, UserInterface {
                     int idToBranch = branchService.chooseIdBranchInList(listBranches);
                     productDAO.moveProductToAnotherWarehouse(idBranch,idToBranch,2);
                 }
+                branchDAO.deleteBranchByUserId(idManager);
             }
-            if(branchDAO.deleteBranchByUserId(idManager) || userDAO.delete(idManager)){
+
+            if(userDAO.delete(idManager)){
                 System.out.println(">> Delete manager successfully!");
-            }
-            else System.out.println(">> Delete manager failed!");
+            }else System.out.println(">> Delete manager failed!");
         }else{
             throw new NotFoundException("ID " + idManager + " not found in DB");
         }

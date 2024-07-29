@@ -153,4 +153,21 @@ public class ProductDAO {
         }
         return listProductAttributes;
     }
+
+    public int sumAmountProductByBranchId(Integer branchId){
+        connectionDB.connect();
+        String query = "SELECT SUM(AMOUNT) FROM PRODUCT WHERE BRANCH_ID = ?";
+
+        try {
+            preparedStatement = connectionDB.getConnection().prepareStatement(query);
+            preparedStatement.setInt(1,branchId);
+            resultSet = preparedStatement.executeQuery();
+            if(resultSet.next()) return resultSet.getInt(1);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            connectionDB.disconnect();
+        }
+        return 0;
+    }
 }
